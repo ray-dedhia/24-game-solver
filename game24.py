@@ -132,7 +132,7 @@ class twenty_four_game:
 				for sol in sols:
 					print sol
 			else:
-				print "Sorry, no solutions could be found."
+				print "No solutions exist."
 
 	def run_game(self, iter_nums):
 		'''This function generates the solutions for the 24 game solver. It is called by run_game_manual and run_game_interactive.'''
@@ -260,7 +260,7 @@ parser = argparse.ArgumentParser(description='Solve the 24 game.')
 parser.add_argument('--nums', default=[0,0,0,0], nargs=4, 
 	metavar=('N1', 'N2', 'N3', 'N4'), type=int, help='24 game card numbers')
 
-parser.add_argument('--max_sols', default=10, nargs=1, metavar='S', 
+parser.add_argument('--max_sols', default=10, nargs=1, metavar='S', type=int,
                    help='number of solutions to display (default=10)')
 
 parser.add_argument('--no_max_sols', help='show all solutions', action='store_true')
@@ -270,7 +270,7 @@ args = parser.parse_args()
 if args.no_max_sols:
 	max_sols = None
 else:
-	max_sols = args.max_sols
+	max_sols = args.max_sols[0]
 
 game = twenty_four_game(max_sols)
 
@@ -282,4 +282,4 @@ else:
 		for sol in sols:
 			print sol
 	else:
-		print "Sorry, no solutions could be found."
+		print "No solutions exist."
