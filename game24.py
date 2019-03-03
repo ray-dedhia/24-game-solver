@@ -1,8 +1,8 @@
 import numpy as np
 import re
 import argparse 
-from fractions import Fraction as F
-from itertools import permutations as P
+from fractions import Fraction 
+from itertools import permutations 
 
 def add(a,b):
 	'''Adds two numbers and returns the result.'''
@@ -19,7 +19,7 @@ def mul(a,b):
 def div(a,b):
 	'''Divides two numbers and returns the result as a Fraction (or False if ZeroDivisionError).'''
 	try:
-		return F(a,b)
+		return Fraction(a,b)
 	except ZeroDivisionError:
 		return None
 
@@ -33,8 +33,8 @@ class twenty_four_game:
 
 	def __init__(self, stop):
 		self.ops = [add, add, add, sub, sub, sub, mul, mul, mul, div, div, div]
-		self.parens = [self.A, self.B, self.C, self.D, self.E]
-		self.iter_ops = list(P(self.ops, 3))
+		self.parens = [self.paren_pattern_a, self.paren_pattern_b, self.paren_pattern_c, self.paren_pattern_d, self.paren_pattern_e]
+		self.iter_ops = list(permutations(self.ops, 3))
 		self.def_stop = stop
 
 		symbols = ("+", "-", "*", "/")
@@ -81,14 +81,22 @@ class twenty_four_game:
 			rem_paren (str): the solution description without parenthesis
 			sol (str): the solution description with parentheses
 		''' 
-		rem_paren_arr = rem_paren.split(" ")
-		paren_holder = re.sub(r"[+\-*\/0-9]", "{}", sol)
-		for ind in range(1,6,2):
-			if rem_paren_arr[ind]=="+" or rem_paren[ind]=="*":
-				if int(rem_paren_arr[ind-1]) > int(rem_paren_arr[ind+1]):
-					rem_paren_arr[ind-1], rem_paren_arr[ind+1] = rem_paren_arr[ind+1], rem_paren_arr[ind-1]
-		return paren_holder.format(*rem_paren_arr)
-		
+
+		sol_array = sol.split(" ")
+
+		for ind in range(len(sol_array)-4):  
+			sol_substring = ""
+			for item in sol_array[ind:ind+5]:
+				sol_substring += item	
+			if re.match(r"\([0-9]+[\+|\*][0-9]+\)", sol_substring) is not None:
+				if int(sol_array[ind+1]) > int(sol_array[ind+3]):
+					sol_array[ind+1], sol_array[ind+3] = sol_array[ind+3], sol_array[ind+1]
+
+		ordered_sol = ""
+		for val in sol_array:
+			ordered_sol += val + " "
+
+		return ordered_sol
 
 	def remove_duplicates(self, sols):
 		'''This function takes in a solution description string (sols) and removes solutions that are effectively duplicates of other solutions.'''
@@ -107,7 +115,7 @@ class twenty_four_game:
 
 	def run_game_manual(self, nums):
 		'''Runs the 24 game solver manually (i.e. non-interactive mode, so the user must input the numbers manually into the function instead of being prompted for them).'''
-		iter_nums = list(P(nums))
+		iter_nums = list(permutations(nums))
 
 		sols = self.run_game(iter_nums)
 
@@ -125,7 +133,7 @@ class twenty_four_game:
 				print "leaving 24 game"
 				break
 
-			iter_nums = list(P(nums))
+			iter_nums = list(permutations(nums))
 			sols = self.run_game(iter_nums)
 
 			if len(sols) > 0:
@@ -154,9 +162,9 @@ class twenty_four_game:
 
 		return SOLS
 
-	def A(self, nums, ops):
+	def paren_pattern_a(self, nums, ops):
 		'''
-		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme A.
+		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme a.
 
 		Args:
 			nums (int arr): numbers to perform calculations on
@@ -165,18 +173,18 @@ class twenty_four_game:
 		Returns:
 			(n1 op1 n2) op2 (n3 op3 n4)
 		'''
-		op0, op1, op2 = ops
+		op1, op2, op3 = ops
 		n1, n2, n3, n4 = nums
-		str_rep = "({} {} {}) {} ({} {} {})".format(n1, op0.n, n2, op1.n, n3, op2.n, n4)
+		str_rep = "( {} {} {} ) {} ( {} {} {} )".format(n1, op1.n, n2, op2.n, n3, op3.n, n4)
 		try:
-			val = op1( op0(n1, n2), op2(n3, n4) )
+			val = op2( op1(n1, n2), op3(n3, n4) )
 			return (val, str_rep)
 		except TypeError:
 			return (None, None)
 
-	def B(self, nums, ops):
+	def paren_pattern_b(self, nums, ops):
 		'''
-		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme A.
+		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme b.
 
 		Args:
 			nums (int arr): numbers to perform calculations on
@@ -185,18 +193,18 @@ class twenty_four_game:
 		Returns:
 			((n1 op1 n2) op2 n3) op3 n4
 		'''
-		op0, op1, op2 = ops
+		op1, op2, op3 = ops
 		n1, n2, n3, n4 = nums
-		str_rep = "(({} {} {}) {} {}) {} {}".format(n1, op0.n, n2, op1.n, n3, op2.n, n4)
+		str_rep = "( ( {} {} {} ) {} {} ) {} {}".format(n1, op1.n, n2, op2.n, n3, op3.n, n4)
 		try:
-			val = op2( op1( op0(n1, n2), n3), n4)
+			val = op3( op2( op1(n1, n2), n3), n4)
 			return (val, str_rep)
 		except TypeError:
 			return (None, None)
 
-	def C(self, nums, ops):
+	def paren_pattern_c(self, nums, ops):
 		'''
-		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme A.
+		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme c.
 
 		Args:
 			nums (int arr): numbers to perform calculations on
@@ -205,18 +213,18 @@ class twenty_four_game:
 		Returns:
 			n1 op1 (n2 op2 (n3 op3 n4))
 		'''
-		op0, op1, op2 = ops
+		op1, op2, op3 = ops
 		n1, n2, n3, n4 = nums
-		str_rep = "{} {} ({} {} ({} {} {}))".format(n1, op0.n, n2, op1.n, n3, op2.n, n4)
+		str_rep = "{} {} ( {} {} ( {} {} {} ) )".format(n1, op1.n, n2, op2.n, n3, op3.n, n4)
 		try:
-			val = op0( n1, op1( n2, op2(n3, n4) ) )
+			val = op1( n1, op2( n2, op3(n3, n4) ) )
 			return (val, str_rep)
 		except TypeError:
 			return (None, None)
 
-	def D(self, nums, ops):
+	def paren_pattern_d(self, nums, ops):
 		'''
-		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme A.
+		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme d.
 
 		Args:
 			nums (int arr): numbers to perform calculations on
@@ -225,18 +233,18 @@ class twenty_four_game:
 		Returns:
 			(n1 op1 (n2 op2 n3)) op3 n4
 		'''
-		op0, op1, op2 = ops
+		op1, op2, op3 = ops
 		n1, n2, n3, n4 = nums
-		str_rep = "({} {} ({} {} {})) {} {}".format(n1, op0.n, n2, op1.n, n3, op2.n, n4)
+		str_rep = "( {} {} ( {} {} {} ) ) {} {}".format(n1, op1.n, n2, op2.n, n3, op3.n, n4)
 		try:
-			val = op2( op0( n1, op1(n2, n3) ), n4)
+			val = op3( op1( n1, op2(n2, n3) ), n4)
 			return (val, str_rep)
 		except TypeError:
 			return (None, None)
 
-	def E(self, nums, ops):
+	def paren_pattern_e(self, nums, ops):
 		'''
-		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme A.
+		Calculates a value given an array of four numbers and an array of three operations and parenthesis scheme e.
 
 		Args:
 			nums (int arr): numbers to perform calculations on
@@ -245,11 +253,11 @@ class twenty_four_game:
 		Returns:
 			n1 op1 ((n2 op2 n3) op3 n4)
 		'''
-		op0, op1, op2 = ops
+		op1, op2, op3 = ops
 		n1, n2, n3, n4 = nums
-		str_rep = "{} {} (({} {} {}) {} {})".format(n1, op0.n, n2, op1.n, n3, op2.n, n4)
+		str_rep = "{} {} ( ( {} {} {} ) {} {} )".format(n1, op1.n, n2, op2.n, n3, op3.n, n4)
 		try:
-			val = op0(n1, op2( op1(n2, n3), n4) )
+			val = op1(n1, op3( op2(n2, n3), n4) )
 			return (val, str_rep)
 		except TypeError:
 			return (None, None)
@@ -269,6 +277,8 @@ args = parser.parse_args()
 
 if args.no_max_sols:
 	max_sols = None
+elif args.max_sols==10:
+	max_sols = 10
 else:
 	max_sols = args.max_sols[0]
 
